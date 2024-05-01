@@ -19,11 +19,14 @@ provider "aws" {
 
 // Include modules for specific configurations
 
-#The my_vpc module handles the VPC creation and subnet definitions.
+#The vpc module handles the VPC creation and subnet definitions.
 
-module "my_vpc" {
-  source = "github.com/lily4499/terraform-aws-eks-v1.git/eks-modules/vpc"
-  vpc_id         = module.my_vpc.vpc_id   # Use the vpc_id output from my_vpc module
+module "vpc" {
+  #source = "./modules/my_vpc/vpc"
+
+  source = "github.com/lily4499/terraform-aws-eks-v1.git/modules/my_vpc/vpc"
+  vpc_id          = module.vpc.vpc_id  # Reference the VPC ID created by the VPC module
+  #vpc_id         = module.my_vpc.vpc_id   # Use the vpc_id output from my_vpc module
   vpc_cidr       = var.vpc_cidr
   dns_hostnames  = var.dns_hostnames
   dns_support    = var.dns_support
@@ -33,13 +36,14 @@ module "my_vpc" {
   priv_two_cidr  = var.priv_two_cidr
 } 
 
-#The my_eks module leverages the outputs (private_subnet_ids, public_subnet_ids) from the my_vpc module for configuring the Amazon EKS cluster, without needing to redefine the VPC-related variables.
+#The eks module leverages the outputs (private_subnet_ids, public_subnet_ids) from the my_vpc module for configuring the Amazon EKS cluster, without needing to redefine the VPC-related variables.
 
-module "my_eks" {
-  source = "github.com/lily4499/terraform-aws-eks-v1.git/eks-modules/eks"
+module "eks" {
+  #source = "./modules/my_eks/eks"
+  source = "github.com/lily4499/terraform-aws-eks-v1.git/modules/my_eks/eks"
 
   # Provide required input variables for EKS module
-  vpc_id         = module.my_vpc.vpc_id
+  vpc_id         = module.vpc.vpc_id 
   vpc_cidr       = var.vpc_cidr
   dns_hostnames  = var.dns_hostnames
   dns_support    = var.dns_support
@@ -55,8 +59,8 @@ module "my_eks" {
   capacity_type               = var.capacity_type
 
     # Pass VPC-related information from my_vpc module to my_eks module
-  private_subnet_ids          = module.my_vpc.private_subnet_ids
-  public_subnet_ids           = module.my_vpc.public_subnet_ids
+  private_subnet_ids          = module.vpc.private_subnet_ids
+  public_subnet_ids           = module.vpc.public_subnet_ids
  
 }
 
